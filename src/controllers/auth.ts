@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import User from "../models/User";
 import brycpt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import Business from "../models/Business";
 
 const register = async (req: Request, res: Response) => {
 	const { name, email, password } = req.body;
@@ -80,4 +81,36 @@ const selectRole = async (req: Request, res: Response) => {
 	}
 };
 
-export { register, selectRole };
+const addBusiness = async (req: Request, res: Response) => {
+	const user = await User.findById(req.user?._id);
+	const details = req.body;
+
+	if (!user) return res.status(404).json({ message: "User not found" });
+	if (!user.role) return res.status(404).json({ message: "Invalid role" });
+
+	if (user.role !== "seller")
+		return res.status(404).json({ message: "Only vendors can add business" });
+
+	const existing_bunsiness = await Business.findOne({ owner: user._id });
+
+	if (existing_bunsiness) {
+		return res.status(400).json({ message: "Business already exists" });
+	}
+
+	try {
+		await Business.create({
+			name: details.name,
+			email: details.email,
+			owner: user._id,
+			phone: details.phone,
+			description: details.description,
+			makes_delivery: details.makes_delivery?.toLowerCase() === "yes",
+		});
+
+		return res.status(200).json({ message: "Business created" });
+	} catch (error) {
+		return res.status(500).json({ message: "Couldn't add business" });
+	}
+};
+
+export { register, selectRole, addBusiness };
