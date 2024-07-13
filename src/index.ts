@@ -10,7 +10,7 @@ const port = process.env.PORT || 3000;
 require("./service/db");
 
 app.use(express.json());
-app.use(cors());
+app.use(cors({ origin: "http://localhost:3000", credentials: true }));
 app.use(cookieParser());
 
 app.use("/", routes);

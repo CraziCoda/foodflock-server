@@ -48,11 +48,36 @@ const register = async (req: Request, res: Response) => {
 			maxAge: maxAge * 1000,
 		});
 
-		return res.status(201).json({ message: "User created" });
+		const user_obj = await User.findById(
+			new_user._id,
+			"-password -__v -createdAt -updatedAt"
+		);
+
+		return res.status(201).json({
+			message: "User created",
+			user: user_obj,
+		});
 	} catch (err) {
 		console.log(err);
 		return res.status(500).json({ message: "Couldn't register user" });
 	}
 };
 
-export { register };
+const selectRole = async (req: Request, res: Response) => {
+	const user = await User.findById(req.user?._id);
+	const role = req.body.role;
+
+	if (!user) return res.status(404).json({ message: "User not found" });
+	if (!role || role === "admin")
+		return res.status(404).json({ message: "Role not found" });
+
+	try {
+		await User.updateOne({ _id: user._id }, { role: role });
+
+		return res.status(200).json({ message: "Role updated" });
+	} catch (err) {
+		return res.status(500).json({ message: "Couldn't select role" });
+	}
+};
+
+export { register, selectRole };

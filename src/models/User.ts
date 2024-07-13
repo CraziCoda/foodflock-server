@@ -1,23 +1,25 @@
 import mongoose from "mongoose";
 
-interface UserI {
+export interface UserI {
+	_id: mongoose.Schema.Types.ObjectId;
 	name: string;
 	email: string;
 	password: string;
-	role: string;
+	role: "buyer" | "seller" | "admin" | null;
 }
 
 const UserSchema = new mongoose.Schema<UserI>(
 	{
 		name: {
 			type: String,
-            default: "",
+			default: "",
 			required: true,
 		},
 		email: {
 			type: String,
 			required: true,
-            unique: true,
+			unique: true,
+            lowercase: true,
 		},
 		password: {
 			type: String,
@@ -25,8 +27,9 @@ const UserSchema = new mongoose.Schema<UserI>(
 		},
 		role: {
 			type: String,
-			required: true,
-            default: "buyer",
+			default: null,
+			enum: ["buyer", "seller", "admin", null],
+			lowercase: true,
 		},
 	},
 	{
