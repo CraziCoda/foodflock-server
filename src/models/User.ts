@@ -4,7 +4,7 @@ export interface UserI extends mongoose.Document {
 	name: string;
 	email: string;
 	password: string;
-	role: "buyer" | "seller" | "admin" | null;
+	role: "client" | "vendor" | "admin" | null;
 }
 
 const UserSchema = new mongoose.Schema<UserI>(
@@ -27,7 +27,7 @@ const UserSchema = new mongoose.Schema<UserI>(
 		role: {
 			type: String,
 			default: null,
-			enum: ["buyer", "seller", "admin", null],
+			enum: ["client", "vendor", "admin", null],
 			lowercase: true,
 		},
 	},

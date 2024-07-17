@@ -88,7 +88,7 @@ const addBusiness = async (req: Request, res: Response) => {
 	if (!user) return res.status(404).json({ message: "User not found" });
 	if (!user.role) return res.status(404).json({ message: "Invalid role" });
 
-	if (user.role !== "seller")
+	if (user.role !== "vendor")
 		return res.status(404).json({ message: "Only vendors can add business" });
 
 	const existing_bunsiness = await Business.findOne({ owner: user._id });
@@ -143,7 +143,14 @@ const login = async (req: Request, res: Response) => {
 			maxAge: maxAge * 1000,
 		});
 
-        return res.status(200).json({ message: "Login successful" });
+		const user_obj = await User.findById(
+			user._id,
+			"-password -__v -createdAt -updatedAt"
+		);
+
+		return res
+			.status(200)
+			.json({ message: "Login successful", user: user_obj });
 	} catch (err) {
 		return res.status(500).json({ message: "Couldn't login user" });
 	}
