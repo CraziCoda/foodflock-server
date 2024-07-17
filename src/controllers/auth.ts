@@ -98,7 +98,7 @@ const addBusiness = async (req: Request, res: Response) => {
 	}
 
 	try {
-		await Business.create({
+		const business = await Business.create({
 			name: details.name,
 			email: details.email,
 			owner: user._id,
@@ -107,7 +107,7 @@ const addBusiness = async (req: Request, res: Response) => {
 			makes_delivery: details.makes_delivery?.toLowerCase() === "yes",
 		});
 
-		return res.status(200).json({ message: "Business created" });
+		return res.status(200).json({ message: "Business created", business });
 	} catch (error) {
 		return res.status(500).json({ message: "Couldn't add business" });
 	}
