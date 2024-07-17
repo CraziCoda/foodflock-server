@@ -113,4 +113,40 @@ const addBusiness = async (req: Request, res: Response) => {
 	}
 };
 
-export { register, selectRole, addBusiness };
+const login = async (req: Request, res: Response) => {
+	const { email, password } = req.body;
+
+	if (!email || !password) {
+		return res.status(400).json({ message: "Email and password are required" });
+	}
+
+	try {
+		const user = await User.findOne({ email });
+		if (!user) {
+			return res.status(400).json({ message: "User not found" });
+		}
+		const isMatch = await brycpt.compare(password, user.password);
+
+		if (!isMatch) {
+			return res.status(400).json({ message: "Incorrect password" });
+		}
+
+		const maxAge = 3 * 60 * 60;
+		const token = jwt.sign(
+			{ name: user.name, email: user.email, _id: user._id },
+			process.env.JWT_SECRET!,
+			{ expiresIn: maxAge }
+		);
+
+		res.cookie("jwt", token, {
+			httpOnly: true,
+			maxAge: maxAge * 1000,
+		});
+
+        return res.status(200).json({ message: "Login successful" });
+	} catch (err) {
+		return res.status(500).json({ message: "Couldn't login user" });
+	}
+};
+
+export { register, selectRole, addBusiness, login };
