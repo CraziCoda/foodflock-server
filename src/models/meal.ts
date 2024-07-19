@@ -5,6 +5,7 @@ export interface MealI {
 	starting_price: number;
 	meal_type: "breakfast" | "lunch" | "dinner" | "snack" | "all";
 	description: string;
+    charge_type: "price" | "quantity"
 }
 
 export interface AccompanimentI {
@@ -34,6 +35,12 @@ const MealSchema = new mongoose.Schema<MealI>({
 		type: String,
 		default: "",
 	},
+    charge_type: {
+        type: String,
+        enum: ["price", "quantity"],
+        required: true,
+        default: "price",
+    }
 });
 
 const AccompanimentSchema = new mongoose.Schema<AccompanimentI>({
