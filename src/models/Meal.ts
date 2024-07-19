@@ -2,16 +2,18 @@ import mongoose from "mongoose";
 
 export interface MealI {
 	name: string;
-	starting_price: number;
+	price: number;
+	quantity: number;
 	meal_type: "breakfast" | "lunch" | "dinner" | "snack" | "all";
 	description: string;
-    charge_type: "price" | "quantity"
+	charge_type: "price" | "quantity";
+	business: mongoose.Types.ObjectId;
 }
 
 export interface AccompanimentI {
 	name: string;
 	meal: mongoose.Types.ObjectId;
-	starting_price: number;
+	price: number;
 	isFree: boolean;
 }
 
@@ -20,7 +22,12 @@ const MealSchema = new mongoose.Schema<MealI>({
 		type: String,
 		required: true,
 	},
-	starting_price: {
+	quantity: {
+		type: Number,
+		required: true,
+		default: 0,
+	},
+	price: {
 		type: Number,
 		required: true,
 		default: 0,
@@ -35,12 +42,17 @@ const MealSchema = new mongoose.Schema<MealI>({
 		type: String,
 		default: "",
 	},
-    charge_type: {
-        type: String,
-        enum: ["price", "quantity"],
-        required: true,
-        default: "price",
-    }
+	charge_type: {
+		type: String,
+		enum: ["price", "quantity"],
+		required: true,
+		default: "price",
+	},
+	business: {
+		type: mongoose.Schema.Types.ObjectId,
+		ref: "Business",
+		required: true,
+	},
 });
 
 const AccompanimentSchema = new mongoose.Schema<AccompanimentI>({
@@ -53,7 +65,7 @@ const AccompanimentSchema = new mongoose.Schema<AccompanimentI>({
 		ref: "Meal",
 		required: true,
 	},
-	starting_price: {
+	price: {
 		type: Number,
 		required: true,
 		default: 0,
@@ -66,4 +78,7 @@ const AccompanimentSchema = new mongoose.Schema<AccompanimentI>({
 });
 
 export const Meal = mongoose.model("Meal", MealSchema);
-export const Accompaniment = mongoose.model("Accompaniment", AccompanimentSchema);
+export const Accompaniment = mongoose.model(
+	"Accompaniment",
+	AccompanimentSchema
+);
