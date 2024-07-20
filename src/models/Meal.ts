@@ -4,7 +4,7 @@ export interface MealI {
 	name: string;
 	price: number;
 	quantity: number;
-	meal_type: "breakfast" | "lunch" | "dinner" | "snack" | "all";
+	meal_type: "breakfast" | "lunch" | "dinner" | "snack" | "other";
 	description: string;
 	charge_type: "price" | "quantity";
 	business: mongoose.Types.ObjectId;
@@ -34,9 +34,9 @@ const MealSchema = new mongoose.Schema<MealI>({
 	},
 	meal_type: {
 		type: String,
-		enum: ["breakfast", "lunch", "dinner", "snack", "all"],
+		enum: ["breakfast", "lunch", "dinner", "snack", "other"],
 		required: true,
-		default: "all",
+		default: "other",
 	},
 	description: {
 		type: String,
