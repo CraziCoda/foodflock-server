@@ -18,13 +18,15 @@ export const getBusiness = async (req: Request, res: Response) => {
 export const updateBusiness = async (req: Request, res: Response) => {
 	const user = req.user;
 	const { updates } = req.body;
+	const makes_delivery = updates.makes_delivery?.toLowerCase() === "yes";
 	try {
 		await Business.findOneAndUpdate(
 			{ owner: user?._id },
-			{ $set: { ...updates } }
+			{ $set: { ...updates, makes_delivery } }
 		);
 		return res.status(200).json({ message: "Business updated" });
 	} catch (error) {
+		console.log(error);
 		return res.status(500).json({ message: "Couldn't update business" });
 	}
 };
