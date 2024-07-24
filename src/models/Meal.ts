@@ -3,10 +3,11 @@ import mongoose from "mongoose";
 export interface MealI {
 	name: string;
 	price: number;
-	quantity: number;
+	// quantity: number;
 	meal_type: "breakfast" | "lunch" | "dinner" | "snack" | "other";
 	description: string;
 	charge_type: "price" | "quantity";
+    image: string;
 	business: mongoose.Types.ObjectId;
 }
 
@@ -21,12 +22,11 @@ const MealSchema = new mongoose.Schema<MealI>({
 	name: {
 		type: String,
 		required: true,
-	},
-	quantity: {
-		type: Number,
-		required: true,
-		default: 0,
-	},
+	}, 
+    image: {
+        type: String,
+        required: true,
+    },
 	price: {
 		type: Number,
 		required: true,
@@ -37,6 +37,7 @@ const MealSchema = new mongoose.Schema<MealI>({
 		enum: ["breakfast", "lunch", "dinner", "snack", "other"],
 		required: true,
 		default: "other",
+        lowercase: true,
 	},
 	description: {
 		type: String,
@@ -47,6 +48,7 @@ const MealSchema = new mongoose.Schema<MealI>({
 		enum: ["price", "quantity"],
 		required: true,
 		default: "price",
+        lowercase: true,
 	},
 	business: {
 		type: mongoose.Schema.Types.ObjectId,
