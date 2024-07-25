@@ -211,7 +211,25 @@ const getMeals = async (req: Request, res: Response) => {
 			return res.status(200).json({ meals: meals_arr });
 		} else {
 			const meals = await Meal.find({});
-			return res.status(200).json({ meals });
+
+			const meals_arr = [];
+
+			for (let meal of meals) {
+				const meal_obj = {
+					_id: meal._id,
+					name: meal.name,
+					price: meal.price,
+					meal_type: meal.meal_type,
+					description: meal.description,
+					charge_type: meal.charge_type,
+					image: meal.image,
+					accompaniments: [] as any,
+				};
+				const accompaniments = await Accompaniment.find({ meal: meal._id });
+				meal_obj.accompaniments = accompaniments;
+				meals_arr.push(meal_obj);
+			}
+			return res.status(200).json({ meals: meals_arr });
 		}
 	} catch (error) {
 		return res.status(500).json({ message: "Couldn't get meals" });

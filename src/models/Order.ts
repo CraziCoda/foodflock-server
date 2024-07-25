@@ -7,6 +7,8 @@ export interface OrderI {
 	orderType: "delivery" | "pickup";
 	deliveryAddress: string;
 	deliveryCharge: number;
+	acceptedByVendor: Boolean;
+	markedAsCompleted: boolean;
 }
 
 export interface OrderedMeaI {
@@ -52,6 +54,16 @@ const OrderSchema = new mongoose.Schema<OrderI>({
 		type: Number,
 		required: true,
 		default: 0,
+	},
+	acceptedByVendor: {
+		type: Boolean,
+		required: true,
+		default: false,
+	},
+	markedAsCompleted: {
+		type: Boolean,
+		required: true,
+		default: false,
 	},
 });
 
@@ -101,9 +113,11 @@ const OrderedAccompanimentSchema = new mongoose.Schema<OrderedAccompanimentI>({
 	},
 });
 
-
 const Order = mongoose.model("Order", OrderSchema);
 const OrderedMeal = mongoose.model("OrderedMeal", OrderedMealSchema);
-const OrderedAccompaniment = mongoose.model("OrderedAccompaniment", OrderedAccompanimentSchema);
+const OrderedAccompaniment = mongoose.model(
+	"OrderedAccompaniment",
+	OrderedAccompanimentSchema
+);
 
 export { Order, OrderedMeal, OrderedAccompaniment };
