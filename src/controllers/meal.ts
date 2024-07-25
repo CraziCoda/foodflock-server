@@ -184,7 +184,6 @@ const deleteMeal = async (req: Request, res: Response) => {
 
 const getMeals = async (req: Request, res: Response) => {
 	const user = req.user;
-	// console.log(user);
 	try {
 		if (user.role === "vendor") {
 			const business = await Business.findOne({ owner: user._id });
@@ -211,7 +210,7 @@ const getMeals = async (req: Request, res: Response) => {
 			}
 			return res.status(200).json({ meals: meals_arr });
 		} else {
-			const meals = await Meal.find();
+			const meals = await Meal.find({});
 			return res.status(200).json({ meals });
 		}
 	} catch (error) {

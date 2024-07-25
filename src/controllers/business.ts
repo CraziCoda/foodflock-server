@@ -30,3 +30,12 @@ export const updateBusiness = async (req: Request, res: Response) => {
 		return res.status(500).json({ message: "Couldn't update business" });
 	}
 };
+
+export const getAllBusiness = async (req: Request, res: Response) => {
+	try {
+		const businesses = await Business.find({}, "-__v");
+		return res.status(200).json({ businesses });
+	} catch (error) {
+		return res.status(500).json({ message: "Couldn't get businesses" });
+	}
+};
