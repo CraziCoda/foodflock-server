@@ -5,9 +5,14 @@ import Business from "../models/Business";
 
 export const placeOrder = async (req: Request, res: Response) => {
 	const user = req.user;
-	const { charge_type, meal_id, quantity, amount, accompaniments } = req.body;
-
-	console.log(quantity);
+	const {
+		charge_type,
+		meal_id,
+		quantity,
+		amount,
+		accompaniments,
+		delivery_option,
+	} = req.body;
 
 	try {
 		const meal = await Meal.findById(meal_id);
@@ -24,7 +29,7 @@ export const placeOrder = async (req: Request, res: Response) => {
 			userId: user._id,
 			businessId: meal.business,
 			status: "pending",
-			orderType: "pickup",
+			orderType: delivery_option,
 		});
 
 		const orderMeal = await OrderedMeal.create({
@@ -171,9 +176,13 @@ export const getOrders = async (req: Request, res: Response) => {
 
 export const acceptOrder = async (req: Request, res: Response) => {
 	const { id } = req.params;
+	const delivery_fee = req.body.delivery_fee;
 
 	try {
-		await Order.updateOne({ _id: id }, { $set: { acceptedByVendor: true } });
+		await Order.updateOne(
+			{ _id: id },
+			{ $set: { acceptedByVendor: true, deliveryCharge: delivery_fee } }
+		);
 
 		return res.status(200).json({ message: "Order accepted successfully" });
 	} catch (error) {
@@ -193,3 +202,19 @@ export const cancelOrder = async (req: Request, res: Response) => {
 		return res.status(500).json({ message: "Couldn't accept order" });
 	}
 };
+
+export const completeOrder = async (req: Request, res: Response) => {
+	const { id } = req.params;
+	try {
+		const role = req.user?.role;
+		if (role === "client") {
+			await Order.updateOne({ _id: id }, { $set: { status: "completed" } });
+            return res.status(200).json({ message: "Order completed successfully" });
+		} else if (role === "vendor") {
+			await Order.updateOne({ _id: id }, { $set: { markedAsCompleted: true } });
+			return res.status(200).json({ message: "Order completed successfully" });
+		}
+	} catch (error) {}
+};
+
+

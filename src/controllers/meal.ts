@@ -167,6 +167,7 @@ const deleteMeal = async (req: Request, res: Response) => {
 				meal_type: meal.meal_type,
 				description: meal.description,
 				charge_type: meal.charge_type,
+				makes_delivery: business.makes_delivery,
 				image: meal.image,
 				accompaniments: [] as any,
 			};
@@ -200,6 +201,7 @@ const getMeals = async (req: Request, res: Response) => {
 					price: meal.price,
 					meal_type: meal.meal_type,
 					description: meal.description,
+					makes_delivery: business.makes_delivery,
 					charge_type: meal.charge_type,
 					image: meal.image,
 					accompaniments: [] as any,
@@ -215,12 +217,15 @@ const getMeals = async (req: Request, res: Response) => {
 			const meals_arr = [];
 
 			for (let meal of meals) {
+				const business = await Business.findById(meal.business);
+
 				const meal_obj = {
 					_id: meal._id,
 					name: meal.name,
 					price: meal.price,
 					meal_type: meal.meal_type,
 					description: meal.description,
+					makes_delivery: business?.makes_delivery || false,
 					charge_type: meal.charge_type,
 					image: meal.image,
 					accompaniments: [] as any,
