@@ -9,6 +9,7 @@ import {
 	completeOrder,
 	getOrders,
 	placeOrder,
+	rateOrder,
 } from "../controllers/order";
 
 const router = Router();
@@ -17,6 +18,7 @@ router.post("/", isAuthenticated, placeOrder);
 router.get("/", isAuthenticated, getOrders);
 router.put("/accept/:id", isAuthenticatedVendor, acceptOrder);
 router.put("/complete/:id", isAuthenticated, completeOrder);
+router.put("/rate/:id", isAuthenticated, rateOrder);
 router.put("/cancel/:id", isAuthenticated, cancelOrder);
 
 export default router;

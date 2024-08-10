@@ -9,7 +9,7 @@ export interface OrderI {
 	deliveryCharge: number;
 	acceptedByVendor: Boolean;
 	markedAsCompleted: boolean;
-	rating: number;
+	rating: number | null;
 }
 
 export interface OrderedMeaI {
@@ -69,7 +69,7 @@ const OrderSchema = new mongoose.Schema<OrderI>({
 	rating: {
 		type: Number,
 		required: true,
-		default: 0,
+		default: null,
 		min: 0,
 		max: 5,
 	},

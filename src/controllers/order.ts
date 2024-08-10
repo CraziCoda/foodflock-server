@@ -106,6 +106,7 @@ export const getOrders = async (req: Request, res: Response) => {
 					deliveryCharge: order.deliveryCharge,
 					markedAsCompleted: order.markedAsCompleted,
 					acceptedByVendor: order.acceptedByVendor,
+                    rating: order.rating,
 				};
 
 				const meal = await OrderedMeal.findOne({ order: order._id });
@@ -146,6 +147,7 @@ export const getOrders = async (req: Request, res: Response) => {
 					deliveryCharge: order.deliveryCharge,
 					markedAsCompleted: order.markedAsCompleted,
 					acceptedByVendor: order.acceptedByVendor,
+                    rating: order.rating,
 				};
 
 				const meal = await OrderedMeal.findOne({ order: order._id });
@@ -209,7 +211,7 @@ export const completeOrder = async (req: Request, res: Response) => {
 		const role = req.user?.role;
 		if (role === "client") {
 			await Order.updateOne({ _id: id }, { $set: { status: "completed" } });
-            return res.status(200).json({ message: "Order completed successfully" });
+			return res.status(200).json({ message: "Order completed successfully" });
 		} else if (role === "vendor") {
 			await Order.updateOne({ _id: id }, { $set: { markedAsCompleted: true } });
 			return res.status(200).json({ message: "Order completed successfully" });
@@ -217,4 +219,15 @@ export const completeOrder = async (req: Request, res: Response) => {
 	} catch (error) {}
 };
 
+export const rateOrder = async (req: Request, res: Response) => {
+	const { id } = req.params;
+	const { rating } = req.body;
 
+	try {
+		await Order.updateOne({ _id: id }, { $set: { rating } });
+		return res.status(200).json({ message: "Order rated successfully" });
+	} catch (error) {
+		console.log(error);
+		return res.status(500).json({ message: "Couldn't rate order" });
+	}
+};
