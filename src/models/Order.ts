@@ -9,7 +9,7 @@ export interface OrderI {
 	deliveryCharge: number;
 	acceptedByVendor: Boolean;
 	markedAsCompleted: boolean;
-	rating: number | null;
+	rating: number | null | undefined;
 }
 
 export interface OrderedMeaI {
@@ -26,54 +26,56 @@ export interface OrderedAccompanimentI {
 	accompaniment: mongoose.Types.ObjectId;
 }
 
-const OrderSchema = new mongoose.Schema<OrderI>({
-	userId: {
-		type: mongoose.Schema.Types.ObjectId,
-		ref: "User",
-		required: true,
+const OrderSchema = new mongoose.Schema<OrderI>(
+	{
+		userId: {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: "User",
+			required: true,
+		},
+		businessId: {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: "Business",
+			required: true,
+		},
+		status: {
+			type: String,
+			enum: ["pending", "completed", "cancelled"],
+			default: "pending",
+		},
+		orderType: {
+			type: String,
+			enum: ["delivery", "pickup"],
+			required: true,
+		},
+		deliveryAddress: {
+			type: String,
+			default: "",
+		},
+		deliveryCharge: {
+			type: Number,
+			required: true,
+			default: 0,
+		},
+		acceptedByVendor: {
+			type: Boolean,
+			required: true,
+			default: false,
+		},
+		markedAsCompleted: {
+			type: Boolean,
+			required: true,
+			default: false,
+		},
+		rating: {
+			type: Number,
+			default: null,
+			min: 0,
+			max: 5,
+		},
 	},
-	businessId: {
-		type: mongoose.Schema.Types.ObjectId,
-		ref: "Business",
-		required: true,
-	},
-	status: {
-		type: String,
-		enum: ["pending", "completed", "cancelled"],
-		default: "pending",
-	},
-	orderType: {
-		type: String,
-		enum: ["delivery", "pickup"],
-		required: true,
-	},
-	deliveryAddress: {
-		type: String,
-		default: "",
-	},
-	deliveryCharge: {
-		type: Number,
-		required: true,
-		default: 0,
-	},
-	acceptedByVendor: {
-		type: Boolean,
-		required: true,
-		default: false,
-	},
-	markedAsCompleted: {
-		type: Boolean,
-		required: true,
-		default: false,
-	},
-	rating: {
-		type: Number,
-		required: true,
-		default: null,
-		min: 0,
-		max: 5,
-	},
-});
+	{ timestamps: true }
+);
 
 const OrderedMealSchema = new mongoose.Schema<OrderedMeaI>({
 	order: {

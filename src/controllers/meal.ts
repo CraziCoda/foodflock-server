@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import Business from "../models/Business";
 import { Accompaniment, Meal } from "../models/Meal";
+import { Order, OrderedMeal } from "../models/Order";
 
 const addMeal = async (req: Request, res: Response) => {
 	const { name, price, meal_type, description, charge_type, accompaniments } =
@@ -58,28 +59,7 @@ const addMeal = async (req: Request, res: Response) => {
 				meal: meal._id,
 			});
 		}
-
-		const meals = await Meal.find({ business: business._id });
-
-		const meals_arr = [];
-
-		for (let meal of meals) {
-			const meal_obj = {
-				_id: meal._id,
-				name: meal.name,
-				price: meal.price,
-				meal_type: meal.meal_type,
-				description: meal.description,
-				charge_type: meal.charge_type,
-				image: meal.image,
-				accompaniments: [] as any,
-			};
-			const accompaniments = await Accompaniment.find({ meal: meal._id });
-			meal_obj.accompaniments = accompaniments;
-			meals_arr.push(meal_obj);
-		}
-
-		return res.status(200).json({ message: "Meal added", meals: meals_arr });
+		return res.status(200).json({ message: "Meal added" });
 	} catch (err) {
 		console.log(err);
 		return res.status(500).json({ message: "Couldn't add meal" });
@@ -118,27 +98,7 @@ const updateMeal = async (req: Request, res: Response) => {
 			await Accompaniment.create({ ...accompaniment, meal: id });
 		}
 
-		const meals = await Meal.find({ business: business._id });
-
-		const meals_arr = [];
-
-		for (let meal of meals) {
-			const meal_obj = {
-				_id: meal._id,
-				name: meal.name,
-				price: meal.price,
-				meal_type: meal.meal_type,
-				description: meal.description,
-				charge_type: meal.charge_type,
-				image: meal.image,
-				accompaniments: [] as any,
-			};
-			const accompaniments = await Accompaniment.find({ meal: meal._id });
-			meal_obj.accompaniments = accompaniments;
-			meals_arr.push(meal_obj);
-		}
-
-		return res.status(200).json({ message: "Meal updated", meals: meals_arr });
+		return res.status(200).json({ message: "Meal updated" });
 	} catch (error) {
 		console.log(error);
 		return res.status(500).json({ message: "Couldn't update meal" });
@@ -156,27 +116,7 @@ const deleteMeal = async (req: Request, res: Response) => {
 		const meal = await Meal.deleteOne({ _id: id, business: business._id });
 		if (meal.deletedCount > 0) await Accompaniment.deleteMany({ meal: id });
 
-		const meals = await Meal.find({ business: business._id });
-		const meals_arr = [];
-
-		for (let meal of meals) {
-			const meal_obj = {
-				_id: meal._id,
-				name: meal.name,
-				price: meal.price,
-				meal_type: meal.meal_type,
-				description: meal.description,
-				charge_type: meal.charge_type,
-				makes_delivery: business.makes_delivery,
-				image: meal.image,
-				accompaniments: [] as any,
-			};
-			const accompaniments = await Accompaniment.find({ meal: meal._id });
-			meal_obj.accompaniments = accompaniments;
-			meals_arr.push(meal_obj);
-		}
-
-		return res.status(200).json({ message: "Meal deleted", meals: meals_arr });
+		return res.status(200).json({ message: "Meal deleted" });
 	} catch (error) {
 		console.log(error);
 		return res.status(500).json({ message: "Couldn't delete meal" });
@@ -219,6 +159,23 @@ const getMeals = async (req: Request, res: Response) => {
 			for (let meal of meals) {
 				const business = await Business.findById(meal.business);
 
+				const orderedmeals = await OrderedMeal.find({ meal: meal._id });
+				let total_rating = 0;
+				let total_count = 0;
+
+				for (const orderedmeal of orderedmeals) {
+					const order = await Order.findById(orderedmeal.order);
+					if (!order) continue;
+					if (order.rating) {
+						total_rating += order.rating;
+						total_count++;
+					}
+				}
+
+				let avgrating = total_count > 0 ? total_rating / total_count : null;
+				// round to 2 decimal places
+				avgrating = avgrating ? Math.round(avgrating * 100) / 100 : null;
+
 				const meal_obj = {
 					_id: meal._id,
 					name: meal.name,
@@ -228,6 +185,7 @@ const getMeals = async (req: Request, res: Response) => {
 					makes_delivery: business?.makes_delivery || false,
 					charge_type: meal.charge_type,
 					image: meal.image,
+					rating: avgrating,
 					accompaniments: [] as any,
 				};
 				const accompaniments = await Accompaniment.find({ meal: meal._id });

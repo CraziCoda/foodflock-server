@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import Business from "../models/Business";
+import { Order } from "../models/Order";
 
 export const getBusiness = async (req: Request, res: Response) => {
 	const user = req.user;
@@ -34,7 +35,31 @@ export const updateBusiness = async (req: Request, res: Response) => {
 export const getAllBusiness = async (req: Request, res: Response) => {
 	try {
 		const businesses = await Business.find({}, "-__v");
-		return res.status(200).json({ businesses });
+		const businesses_arr: any = [];
+
+		await Promise.all(
+			businesses.map(async (business) => {
+				const orders = await Order.find({ businessId: business._id });
+
+				let total_rating = 0;
+				let total_count = 0;
+
+				for (const order of orders) {
+					if (!order.rating) continue;
+					total_rating += order.rating;
+					total_count++;
+				}
+
+				let avg_rating = total_count > 0 ? total_rating / total_count : 0;
+				avg_rating = Math.round(avg_rating * 100) / 100;
+
+				businesses_arr.push({
+					...business.toObject(),
+					rating: avg_rating,
+				});
+			})
+		);
+		return res.status(200).json({ businesses: businesses_arr });
 	} catch (error) {
 		return res.status(500).json({ message: "Couldn't get businesses" });
 	}

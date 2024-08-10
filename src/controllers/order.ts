@@ -91,7 +91,9 @@ export const getOrders = async (req: Request, res: Response) => {
 	try {
 		if (user.role === "client") {
 			const order_arr = [];
-			const orders = await Order.find({ userId: user._id }, "-___v");
+			const orders = await Order.find({ userId: user._id }, "-___v", {
+				sort: { createdAt: -1 },
+			});
 
 			for (let order of orders) {
 				const business = await Business.findById(order.businessId);
@@ -106,7 +108,7 @@ export const getOrders = async (req: Request, res: Response) => {
 					deliveryCharge: order.deliveryCharge,
 					markedAsCompleted: order.markedAsCompleted,
 					acceptedByVendor: order.acceptedByVendor,
-                    rating: order.rating,
+					rating: order.rating,
 				};
 
 				const meal = await OrderedMeal.findOne({ order: order._id });
@@ -135,7 +137,9 @@ export const getOrders = async (req: Request, res: Response) => {
 				return res.status(401).json({ message: "No business found" });
 
 			const order_arr = [];
-			const orders = await Order.find({ businessId: business._id }, "-___v");
+			const orders = await Order.find({ businessId: business._id }, "-___v", {
+				sort: { createdAt: -1 },
+			});
 
 			for (let order of orders) {
 				const order_obj = {
@@ -147,7 +151,7 @@ export const getOrders = async (req: Request, res: Response) => {
 					deliveryCharge: order.deliveryCharge,
 					markedAsCompleted: order.markedAsCompleted,
 					acceptedByVendor: order.acceptedByVendor,
-                    rating: order.rating,
+					rating: order.rating,
 				};
 
 				const meal = await OrderedMeal.findOne({ order: order._id });
