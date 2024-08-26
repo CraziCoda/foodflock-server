@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import Business from "../models/Business";
-import { Order } from "../models/Order";
+import { Order, OrderedMeal } from "../models/Order";
+import mongoose from "mongoose";
 
 export const getBusiness = async (req: Request, res: Response) => {
 	const user = req.user;
@@ -10,7 +11,14 @@ export const getBusiness = async (req: Request, res: Response) => {
 		if (!business)
 			return res.status(404).json({ message: "Business not found" });
 
-		return res.status(200).json({ business });
+		const data = await analytics(business._id as mongoose.Types.ObjectId);
+
+		const business_obj = {
+			...business.toObject(),
+			analytics: data,
+		};
+
+		return res.status(200).json({ business: business_obj });
 	} catch (error) {
 		return res.status(500).json({ message: "Couldn't get business" });
 	}
@@ -63,4 +71,72 @@ export const getAllBusiness = async (req: Request, res: Response) => {
 	} catch (error) {
 		return res.status(500).json({ message: "Couldn't get businesses" });
 	}
+};
+
+const analytics = async (business_id: mongoose.Types.ObjectId) => {
+	const completed_orders = await Order.find({
+		businessId: business_id,
+		status: "completed",
+		markedAsCompleted: true,
+	}).countDocuments();
+
+	const pending_orders = await Order.find({
+		businessId: business_id,
+		status: "pending",
+	}).countDocuments();
+
+	const cancelled_orders = await Order.find({
+		businessId: business_id,
+		status: "cancelled",
+	}).countDocuments();
+
+	const total_orders = await Order.find({
+		businessId: business_id,
+	}).countDocuments();
+
+	const orders = await Order.find({ businessId: business_id });
+
+	let total_revenue = 0;
+	let potential_revenue = 0;
+	let stars = {
+		"4_5": 0,
+		"3": 0,
+		"2": 0,
+		"1": 0,
+	};
+
+	for (const order of orders) {
+		if (order.status === "completed") {
+			const ordered_meal = await OrderedMeal.findOne({ order: order._id });
+			total_revenue +=
+				(ordered_meal?.price || 0) * (ordered_meal?.quantity || 1);
+		}
+		if (order.status === "pending") {
+			const ordered_meal = await OrderedMeal.findOne({ order: order._id });
+			potential_revenue +=
+				(ordered_meal?.price || 0) * (ordered_meal?.quantity || 1);
+		}
+
+		if (order.rating) {
+			if (order.rating >= 4.5) {
+				stars["4_5"]++;
+			} else if (order.rating >= 3) {
+				stars["3"]++;
+			} else if (order.rating >= 2) {
+				stars["2"]++;
+			} else if (order.rating >= 1) {
+				stars["1"]++;
+			}
+		}
+	}
+
+	return {
+		completed_orders,
+		pending_orders,
+		cancelled_orders,
+		total_orders,
+		total_revenue,
+		potential_revenue,
+		stars,
+	};
 };
