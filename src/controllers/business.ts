@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import Business from "../models/Business";
+import Business, { Favourite } from "../models/Business";
 import { Order, OrderedMeal } from "../models/Order";
 import mongoose from "mongoose";
 
@@ -42,12 +42,22 @@ export const updateBusiness = async (req: Request, res: Response) => {
 
 export const getAllBusiness = async (req: Request, res: Response) => {
 	try {
-		const businesses = await Business.find({}, "-__v");
+		const businesses = await Business.find({}, "-__v", {
+			sort: {
+				createdAt: -1,
+			},
+		});
 		const businesses_arr: any = [];
 
 		await Promise.all(
 			businesses.map(async (business) => {
 				const orders = await Order.find({ businessId: business._id });
+				const favourites = await Favourite.find({ business: business._id });
+				const isFavourite =
+					(await Favourite.findOne({
+						business: business._id,
+						user: req.user._id,
+					})) !== null;
 
 				let total_rating = 0;
 				let total_count = 0;
@@ -64,12 +74,39 @@ export const getAllBusiness = async (req: Request, res: Response) => {
 				businesses_arr.push({
 					...business.toObject(),
 					rating: avg_rating,
+					favourites: favourites?.length || 0,
+					isFavourite,
 				});
 			})
 		);
 		return res.status(200).json({ businesses: businesses_arr });
 	} catch (error) {
 		return res.status(500).json({ message: "Couldn't get businesses" });
+	}
+};
+
+export const setFavourite = async (req: Request, res: Response) => {
+	const business = req.body.business;
+
+	try {
+		const isFavourite = await Favourite.findOne({
+			business,
+			user: req.user._id,
+		});
+
+		if (isFavourite) {
+			await Favourite.deleteOne({ business, user: req.user._id });
+		} else {
+			await Favourite.create({
+				business,
+				user: req.user._id,
+			});
+		}
+
+		return res.status(200).json({ message: "Successful" });
+	} catch (err) {
+		console.log(err);
+		return res.status(500).json({ message: "Something went wrong" });
 	}
 };
 
@@ -104,6 +141,8 @@ const analytics = async (business_id: mongoose.Types.ObjectId) => {
 		"2": 0,
 		"1": 0,
 	};
+	let average_rating = 0;
+	let no_rating = 0;
 
 	for (const order of orders) {
 		if (order.status === "completed") {
@@ -118,7 +157,7 @@ const analytics = async (business_id: mongoose.Types.ObjectId) => {
 		}
 
 		if (order.rating) {
-			if (order.rating >= 4.5) {
+			if (order.rating >= 4) {
 				stars["4_5"]++;
 			} else if (order.rating >= 3) {
 				stars["3"]++;
@@ -127,8 +166,13 @@ const analytics = async (business_id: mongoose.Types.ObjectId) => {
 			} else if (order.rating >= 1) {
 				stars["1"]++;
 			}
+
+			average_rating += order.rating;
+			no_rating++;
 		}
 	}
+
+	average_rating /= no_rating;
 
 	return {
 		completed_orders,
@@ -138,5 +182,6 @@ const analytics = async (business_id: mongoose.Types.ObjectId) => {
 		total_revenue,
 		potential_revenue,
 		stars,
+		average_rating,
 	};
 };

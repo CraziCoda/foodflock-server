@@ -39,3 +39,19 @@ const BusinessSchema = new mongoose.Schema<BusinessI>({
 });
 
 export default mongoose.model<BusinessI>("Business", BusinessSchema);
+
+export interface FavouriteI extends mongoose.Document {
+	business: mongoose.Types.ObjectId;
+	user: mongoose.Types.ObjectId;
+}
+
+const FavouriteSchema = new mongoose.Schema<FavouriteI>({
+	user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+	business: {
+		type: mongoose.Schema.Types.ObjectId,
+		ref: "Business",
+		required: true,
+	},
+});
+
+export const Favourite =  mongoose.model<FavouriteI>("Favourite", FavouriteSchema);

@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import Business from "../models/Business";
 import { Accompaniment, Meal } from "../models/Meal";
 import { Order, OrderedMeal } from "../models/Order";
+import { spawn } from "child_process";
 
 const addMeal = async (req: Request, res: Response) => {
 	const { name, price, meal_type, description, charge_type, accompaniments } =
@@ -198,5 +199,78 @@ const getMeals = async (req: Request, res: Response) => {
 		return res.status(500).json({ message: "Couldn't get meals" });
 	}
 };
+
+export const recommend_meal = async (req: Request, res: Response) => {
+	const meals = await Meal.find({});
+
+	const meals_arr = [];
+
+	for (let meal of meals) {
+		const business = await Business.findById(meal.business);
+
+		const orderedmeals = await OrderedMeal.find({ meal: meal._id });
+		let total_rating = 0;
+		let total_count = 0;
+
+		for (const orderedmeal of orderedmeals) {
+			const order = await Order.findById(orderedmeal.order);
+			if (!order) continue;
+			if (order.rating) {
+				total_rating += order.rating;
+				total_count++;
+			}
+		}
+
+		let avgrating = total_count > 0 ? total_rating / total_count : null;
+		// round to 2 decimal places
+		avgrating = avgrating ? Math.round(avgrating * 100) / 100 : null;
+
+		const meal_obj = {
+			_id: meal._id,
+			name: meal.name,
+			price: meal.price,
+			meal_type: meal.meal_type,
+			description: meal.description,
+			makes_delivery: business?.makes_delivery || false,
+			charge_type: meal.charge_type,
+			image: meal.image,
+			rating: avgrating,
+			accompaniments: [] as any,
+		};
+		const accompaniments = await Accompaniment.find({ meal: meal._id });
+		meal_obj.accompaniments = accompaniments;
+		meals_arr.push(meal_obj);
+	}
+	const meals_ids = await recommend(req.user?._id as string);
+	// sort meals by the index of the recommended meal
+	const meals_sorted = [];
+	// @ts-ignore
+	for (let id of meals_ids) {
+		// get the index of the meal in the sorted array
+		const index = meals_arr.findIndex((meal) => meal?._id.toString() === id);
+        if (index !== -1) {
+            meals_sorted.push(meals_arr[index]);
+        }
+	}
+
+	return res.status(200).json({ meals: meals_sorted?.length === 0 ? meals_arr : meals_sorted });
+};
+
+async function recommend(user: string) {
+	const python_exe = "python";
+	const script_path = "./exe/main.py";
+
+	const python = spawn(python_exe, [script_path, user]);
+	let stdout = "";
+	python.stdout.on("data", (data) => {
+		stdout += `${data.toString()}`;
+	});
+	// delay for 5 seconds
+	await new Promise((resolve) => setTimeout(resolve, 5000));
+	// change stdout to an array
+	const stdout_arr = stdout.split("\n");
+	stdout_arr.pop();
+	return stdout_arr;
+}
 
 export { addMeal, updateMeal, deleteMeal, getMeals };

@@ -1,5 +1,11 @@
 import { Router } from "express";
-import { addMeal, updateMeal, deleteMeal, getMeals } from "../controllers/meal";
+import {
+	addMeal,
+	updateMeal,
+	deleteMeal,
+	getMeals,
+	recommend_meal,
+} from "../controllers/meal";
 import {
 	isAuthenticated,
 	isAuthenticatedVendor,
@@ -25,5 +31,6 @@ router.post("/", isAuthenticatedVendor, upload.single("image"), addMeal);
 router.delete("/:id", isAuthenticatedVendor, deleteMeal);
 router.put("/:id", isAuthenticatedVendor, upload.single("image"), updateMeal);
 router.get("/", isAuthenticated, getMeals);
+router.get("/recommended", isAuthenticated, recommend_meal);
 
 export default router;
