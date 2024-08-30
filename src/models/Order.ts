@@ -10,6 +10,7 @@ export interface OrderI {
 	acceptedByVendor: Boolean;
 	markedAsCompleted: boolean;
 	rating: number | null | undefined;
+    awaitingDelivery: boolean;
 }
 
 export interface OrderedMeaI {
@@ -24,6 +25,14 @@ export interface OrderedAccompanimentI {
 	quantity: number;
 	price: number;
 	accompaniment: mongoose.Types.ObjectId;
+}
+
+export interface DeliveryInfoI {
+    order: mongoose.Types.ObjectId;
+    name: string;
+    phone: string;
+    contact_person_phone: string;
+    delivery_location: string;
 }
 
 const OrderSchema = new mongoose.Schema<OrderI>(
@@ -67,6 +76,11 @@ const OrderSchema = new mongoose.Schema<OrderI>(
 			required: true,
 			default: false,
 		},
+        awaitingDelivery: {
+            type: Boolean,
+            required: true,
+            default: true,
+        },
 		rating: {
 			type: Number,
 			default: null,
@@ -123,11 +137,34 @@ const OrderedAccompanimentSchema = new mongoose.Schema<OrderedAccompanimentI>({
 	},
 });
 
+const DeliveryInfoSchema = new mongoose.Schema<DeliveryInfoI>({
+    order: {
+        ref: "Order",
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+    },
+    name: {
+        type: String,
+    },
+    phone: {
+        type: String,
+    },
+    contact_person_phone: {
+        type: String,
+        required: true,
+    },
+    delivery_location: {
+        type: String,
+        required: true,
+    }
+});
+
 const Order = mongoose.model("Order", OrderSchema);
 const OrderedMeal = mongoose.model("OrderedMeal", OrderedMealSchema);
 const OrderedAccompaniment = mongoose.model(
 	"OrderedAccompaniment",
 	OrderedAccompanimentSchema
 );
+const DeliveryInfo = mongoose.model("DeliveryInfo", DeliveryInfoSchema);
 
-export { Order, OrderedMeal, OrderedAccompaniment };
+export { Order, OrderedMeal, OrderedAccompaniment,  DeliveryInfo};

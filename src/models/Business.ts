@@ -7,6 +7,7 @@ export interface BusinessI extends mongoose.Document {
 	phone: string;
 	description: string;
 	makes_delivery: boolean;
+    location: string;
 }
 
 const BusinessSchema = new mongoose.Schema<BusinessI>({
@@ -36,6 +37,10 @@ const BusinessSchema = new mongoose.Schema<BusinessI>({
 		required: true,
 		default: false,
 	},
+    location: {
+        type: String,
+        required: true,
+    }
 });
 
 export default mongoose.model<BusinessI>("Business", BusinessSchema);

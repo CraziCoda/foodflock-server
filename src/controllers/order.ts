@@ -1,6 +1,11 @@
 import { Request, Response } from "express";
 import { Accompaniment, Meal, MealI } from "../models/Meal";
-import { Order, OrderedAccompaniment, OrderedMeal } from "../models/Order";
+import {
+	DeliveryInfo,
+	Order,
+	OrderedAccompaniment,
+	OrderedMeal,
+} from "../models/Order";
 import Business from "../models/Business";
 
 export const placeOrder = async (req: Request, res: Response) => {
@@ -32,13 +37,24 @@ export const placeOrder = async (req: Request, res: Response) => {
 			orderType: delivery_option,
 		});
 
-		const orderMeal = await OrderedMeal.create({
+		await OrderedMeal.create({
 			order: order._id,
 			meal: meal._id,
 			quantity: quantity,
 			price: price,
 		});
 
+		if (order.orderType === "delivery") {
+			const delivery = new DeliveryInfo({
+				order: order._id,
+				contact_person_phone: req.body.delivery_info.contact,
+				delivery_location: req.body.delivery_info.coords.toString(),
+				name: "",
+				phone: "",
+			});
+
+			await delivery.save();
+		}
 		for (let accompaniment of accompaniments) {
 			const acc = await Accompaniment.findById(accompaniment);
 
@@ -86,6 +102,28 @@ export const placeOrder = async (req: Request, res: Response) => {
 	}
 };
 
+export const updateDeliveryInfo = async (req: Request, res: Response) => {
+	const user = req.user;
+	try {
+		console.log(req.body, req.params.id);
+		const order_id = req.params.id;
+		const name = req.body.name;
+		const phone = req.body.phone;
+
+		await DeliveryInfo.findOneAndUpdate({ order: order_id }, { name, phone });
+		await Order.updateOne(
+			{ _id: order_id },
+			{ $set: { awaitingDelivery: false, deliveryCharge: req.body.fee } }
+		);
+		return res
+			.status(200)
+			.json({ message: "Delivery info updated successfully" });
+	} catch (err) {
+		console.log(err);
+		return res.status(500).json({ message: "Couldn't update" });
+	}
+};
+
 export const getOrders = async (req: Request, res: Response) => {
 	const user = req.user;
 	try {
@@ -99,6 +137,8 @@ export const getOrders = async (req: Request, res: Response) => {
 				const business = await Business.findById(order.businessId);
 				if (!business) continue;
 
+				const delivery_info = await DeliveryInfo.findOne({ order: order._id });
+
 				const order_obj = {
 					businessName: business.name,
 					_id: order._id,
@@ -109,6 +149,8 @@ export const getOrders = async (req: Request, res: Response) => {
 					markedAsCompleted: order.markedAsCompleted,
 					acceptedByVendor: order.acceptedByVendor,
 					rating: order.rating,
+					delivery_info: delivery_info?.toObject(),
+					awaitingDelivery: order?.awaitingDelivery,
 				};
 
 				const meal = await OrderedMeal.findOne({ order: order._id });
@@ -142,6 +184,7 @@ export const getOrders = async (req: Request, res: Response) => {
 			});
 
 			for (let order of orders) {
+				const delivery_info = await DeliveryInfo.findOne({ order: order._id });
 				const order_obj = {
 					businessName: business.name,
 					_id: order._id,
@@ -152,6 +195,8 @@ export const getOrders = async (req: Request, res: Response) => {
 					markedAsCompleted: order.markedAsCompleted,
 					acceptedByVendor: order.acceptedByVendor,
 					rating: order.rating,
+					awaitingDelivery: order?.awaitingDelivery,
+					deliveryInfo: delivery_info?.toObject(),
 				};
 
 				const meal = await OrderedMeal.findOne({ order: order._id });

@@ -27,7 +27,12 @@ export const getBusiness = async (req: Request, res: Response) => {
 export const updateBusiness = async (req: Request, res: Response) => {
 	const user = req.user;
 	const { updates } = req.body;
-	const makes_delivery = updates.makes_delivery?.toLowerCase() === "yes";
+	const makes_delivery =
+		typeof updates.makes_delivery === "boolean"
+			? updates.makes_delivery
+			: updates.makes_delivery?.toLowerCase() === "yes";
+	updates.location = updates.location?.toString();
+    
 	try {
 		await Business.findOneAndUpdate(
 			{ owner: user?._id },

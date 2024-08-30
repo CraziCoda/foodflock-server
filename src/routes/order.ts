@@ -10,6 +10,7 @@ import {
 	getOrders,
 	placeOrder,
 	rateOrder,
+    updateDeliveryInfo,
 } from "../controllers/order";
 
 const router = Router();
@@ -20,5 +21,6 @@ router.put("/accept/:id", isAuthenticatedVendor, acceptOrder);
 router.put("/complete/:id", isAuthenticated, completeOrder);
 router.put("/rate/:id", isAuthenticated, rateOrder);
 router.put("/cancel/:id", isAuthenticated, cancelOrder);
+router.put("/delivery/:id", isAuthenticated, updateDeliveryInfo);
 
 export default router;
