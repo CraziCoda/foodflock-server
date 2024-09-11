@@ -184,6 +184,7 @@ const getMeals = async (req: Request, res: Response) => {
 					meal_type: meal.meal_type,
 					description: meal.description,
 					makes_delivery: business?.makes_delivery || false,
+                    location: business?.location || null,
 					charge_type: meal.charge_type,
 					image: meal.image,
 					rating: avgrating,
